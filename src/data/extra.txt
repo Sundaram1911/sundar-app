@@ -1,0 +1,104 @@
+      {/* Search icon */}
+      {/* <TouchableOpacity onPress={() => navigation.navigate("Search")}>
+        <Text style={styles.icon}>🔍</Text>
+      </TouchableOpacity> */}
+
+        {
+    "id": "7",
+    "name": "Ribbed Tank Top",
+    "price": 399,
+    "images": [
+      "https://image.hm.com/assets/hm/b8/9a/b89ad4c5e6f7890123456789012345678901234567.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 50,
+    "description": "Soft ribbed cotton tank top with a comfortable slim fit. Perfect for layering or wearing on its own, featuring breathable fabric and a flattering cut for all-day comfort."
+  },
+  {
+    "id": "8",
+    "name": "Wool Blend Coat",
+    "price": 7999,
+    "images": [
+      "https://image.hm.com/assets/hm/c2/1e/c21ed7f8901234567890123456789012345678901234.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 1600,
+    "description": "Elegant wool blend coat with tailored silhouette and classic lapels. Features premium lining, functional pockets, and sophisticated styling perfect for formal occasions and cold weather."
+  },
+  {
+    "id": "9",
+    "name": "Printed Midi Dress",
+    "price": 1299,
+    "images": [
+      "https://image.hm.com/assets/hm/e4/3b/e43bf5c9012345678901234567890123456789012345.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 260,
+    "description": "Feminine midi dress featuring vibrant prints and flowing fabric. Designed with three-quarter sleeves, comfortable fit, and versatile styling that transitions from day to evening wear."
+  },
+  {
+    "id": "10",
+    "name": "Leather Sneakers",
+    "price": 2299,
+    "images": [
+      "https://image.hm.com/assets/hm/f6/5d/f65dc7e1234567890123456789012345678901234567.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 460,
+    "description": "Premium leather sneakers with modern design and superior comfort. Features cushioned sole, breathable lining, and durable construction for everyday wear and casual styling."
+  },
+  {
+    "id": "11",
+    "name": "Knitted Cardigan",
+    "price": 1799,
+    "images": [
+      "https://image.hm.com/assets/hm/a8/7f/a87f23e4567890123456789012345678901234567890.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 360,
+    "description": "Cozy knitted cardigan in soft wool blend with button closure. Features relaxed fit, ribbed detailing, and versatile design perfect for layering over any outfit."
+  },
+  {
+    "id": "12",
+    "name": "Chino Trousers",
+    "price": 1599,
+    "images": [
+      "https://image.hm.com/assets/hm/b9/81/b981f5g6789012345678901234567890123456789012.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 320,
+    "description": "Classic chino trousers in premium cotton twill with tailored fit. Features traditional five-pocket styling, belt loops, and versatile design suitable for both casual and smart-casual occasions."
+  },
+  {
+    "id": "13",
+    "name": "Denim Jacket",
+    "price": 2199,
+    "images": [
+      "https://image.hm.com/assets/hm/c3/a2/c3a2g7h8901234567890123456789012345678901234.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 440,
+    "description": "Timeless denim jacket with classic wash and authentic detailing. Features button closure, chest pockets, and durable construction that improves with wear for a vintage aesthetic."
+  },
+  {
+    "id": "14",
+    "name": "Silk Scarf",
+    "price": 899,
+    "images": [
+      "https://image.hm.com/assets/hm/d5/c4/d5c4h9i0123456789012345678901234567890123456.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 180,
+    "description": "Luxurious silk scarf with artistic print and soft texture. Features hand-rolled edges, vibrant colors, and versatile styling options to elevate any outfit with sophisticated elegance."
+  },
+  {
+    "id": "15",
+    "name": "Canvas Sneakers",
+    "price": 1399,
+    "images": [
+      "https://image.hm.com/assets/hm/e7/d6/e7d6j1k2345678901234567890123456789012345678.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 280,
+    "description": "Classic canvas sneakers with rubber sole and comfortable fit. Features breathable fabric upper, lace-up design, and casual styling perfect for everyday wear and relaxed occasions."
+  }

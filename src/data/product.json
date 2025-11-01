@@ -1,0 +1,141 @@
+[
+  {
+    "id": "1",
+    "name": "Classic T-Shirt",
+    "price": 499,
+    "images": [
+      "https://image.hm.com/assets/hm/9e/73/9e7393da96141630c2bb1af6c31592c8355d896c.jpg?imwidth=564",
+      "https://image.hm.com/assets/hm/9e/73/9e7393da96141630c2bb1af6c31592c8355d896c.jpg?imwidth=564",
+      "https://image.hm.com/assets/hm/9e/73/9e7393da96141630c2bb1af6c31592c8355d896c.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 10,
+    "description": "Essential everyday comfort meets timeless style in this premium cotton t-shirt. Featuring a relaxed fit and soft, breathable fabric that gets better with every wash."
+  },
+  {
+    "id": "2",
+    "name": "Denim Jeans",
+    "price": 999,
+    "images": [
+      "https://image.hm.com/assets/hm/fd/cc/fdcccf147a00998908092182221f963bf9adc380.jpg?imwidth=564",
+      "https://image.hm.com/assets/hm/fd/cc/fdcccf147a00998908092182221f963bf9adc380.jpg?imwidth=564",
+      "https://image.hm.com/assets/hm/fd/cc/fdcccf147a00998908092182221f963bf9adc380.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 28,
+    "description": "Classic five-pocket denim crafted from premium cotton blend with just the right amount of stretch. Features a modern straight-leg cut that flatters every silhouette and ages beautifully over time."
+  },
+  {
+    "id": "3",
+    "name": "Running Shoes",
+    "price": 1999,
+    "images": [
+      "https://image.hm.com/assets/hm/46/18/461825e692ffae77a42a9bb1d268ab3f6dd3be51.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 10,
+    "description": "High-performance athletic footwear engineered for comfort and durability. Features responsive cushioning, breathable mesh upper, and superior grip sole for all your fitness adventures."
+  },
+  {
+    "id": "4",
+    "name": "Leather Backpack",
+    "price": 2499,
+    "images": [
+      "https://image.hm.com/assets/hm/d4/cd/d4cd1a544c8798fe4cad6628e8a7bd09448a2b0f.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 50,
+    "description": "Sophisticated leather backpack combining functionality with timeless elegance. Features multiple compartments, padded laptop sleeve, and adjustable straps for comfortable all-day wear."
+  },
+  {
+    "id": "5",
+    "name": "Cable-knit Sweat-Shirt",
+    "price": 4999,
+    "images": [
+      "https://image.hm.com/assets/hm/ca/4a/ca4a4a28223b51ed6a21e62e882ee3f2d18c2174.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 21,
+    "description": "Luxurious cable-knit sweatshirt crafted from premium cotton blend. Features intricate textured pattern, ribbed cuffs and hem, offering cozy warmth with sophisticated style for cooler days."
+  },
+  {
+    "id": "6",
+    "name": "Classic Trouser Loose Fit",
+    "price": 3999,
+    "images": [
+      "https://image.hm.com/assets/hm/5c/36/5c3681d04de50dbc60a801bc9eb37614e06fff76.jpg?imwidth=564",
+      "https://image.hm.com/assets/hm/47/cb/47cba9aaa912896480e86320b14daaa879f8b612.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 20,
+    "description": "Versatile button-down shirt in crisp cotton poplin. Perfect for both professional and casual settings, featuring a tailored fit, quality construction, and timeless styling that never goes out of fashion."
+  },
+   {
+    "id": "7",
+    "name": "Classic Black Shirt",
+    "price": 499,
+    "images": [
+      "https://image.hm.com/assets/hm/ca/84/ca8423bef1118e7149d56dec14cb734adc13915e.jpg?imwidth=564",
+      "https://image.hm.com/assets/hm/d4/ad/d4ad5d804bb44212648f663950210f6f1f998b5d.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 10,
+    "description": "Essential everyday comfort meets timeless style in this premium cotton t-shirt. Featuring a relaxed fit and soft, breathable fabric that gets better with every wash."
+  },
+  {
+    "id": "8",
+    "name": "Offwhite Trouser",
+    "price": 999,
+    "images": [
+      "https://image.hm.com/assets/hm/d3/17/d317a60cdfab4c15ca91553fb28b9a4c792c2ce4.jpg?imwidth=564",
+      "https://image.hm.com/assets/hm/75/d8/75d82175fb95b808eb099f08655c53b2c522d996.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 28,
+    "description": "Classic five-pocket denim crafted from premium cotton blend with just the right amount of stretch. Features a modern straight-leg cut that flatters every silhouette and ages beautifully over time."
+  },
+  {
+    "id": "9",
+    "name": "Running Shoes",
+    "price": 1999,
+    "images": [
+      "https://image.hm.com/assets/hm/13/34/1334bb05a7c4714ad7ac040b9dd2249c11360197.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 10,
+    "description": "High-performance athletic footwear engineered for comfort and durability. Features responsive cushioning, breathable mesh upper, and superior grip sole for all your fitness adventures."
+  },
+  {
+    "id": "10",
+    "name": "Trouser Men",
+    "price": 1899,
+    "images": [
+      "https://image.hm.com/assets/hm/db/57/db577720495912fd7a8c51473aa4c3c152bb29b7.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 50,
+    "description": "Sophisticated leather backpack combining functionality with timeless elegance. Features multiple compartments, padded laptop sleeve, and adjustable straps for comfortable all-day wear."
+  },
+  {
+    "id": "11",
+    "name": "Jeans Denim",
+    "price": 4999,
+    "images": [
+      "https://image.hm.com/assets/hm/14/1f/141f600b277cb5b395a13a19b07a80d67cd38301.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 21,
+    "description": "Luxurious cable-knit sweatshirt crafted from premium cotton blend. Features intricate textured pattern, ribbed cuffs and hem, offering cozy warmth with sophisticated style for cooler days."
+  },
+  {
+    "id": "12",
+    "name": "Classic Shirt",
+    "price": 3999,
+    "images": [
+      "https://image.hm.com/assets/hm/f1/54/f1549b8f527a77d3c501f31d4d3b27780ba82823.jpg?imwidth=564"
+    ],
+    "quantity": 1,
+    "discount": 20,
+    "description": "Versatile button-down shirt in crisp cotton poplin. Perfect for both professional and casual settings, featuring a tailored fit, quality construction, and timeless styling that never goes out of fashion."
+  }
+]
