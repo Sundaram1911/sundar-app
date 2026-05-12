@@ -1,5 +1,5 @@
 // --- src/screens/CheckoutScreen.tsx ---
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,10 +7,23 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  TextInput,
+  ScrollView,
+  Alert,
 } from "react-native";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { clearCart } from "../store/slices/cartSlice";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MEDIA_URL } from "../config/env";
+import { ENDPOINTS } from "../config/endpoints";
+import api from "../store/api";
+
+interface FormData {
+  name: string;
+  email: string;
+  phone: string;
+  address: string;
+}
 
 export default function CheckoutScreen({ navigation }: any) {
   const cartItems = useAppSelector((state) => state.cart.items);
@@ -21,7 +34,37 @@ export default function CheckoutScreen({ navigation }: any) {
     0
   );
 
+  const auth = useAppSelector((state) => state.auth);
   const [selectedPayment, setSelectedPayment] = useState<string | null>(null);
+  const [formData, setFormData] = useState<FormData>({
+    name: auth.user?.name || "",
+    email: auth.user?.email || "",
+    phone: (auth.user as any)?.phone || "",
+    address: "",
+  });
+  const [formErrors, setFormErrors] = useState<Partial<FormData>>({});
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const res = await api.get(`${ENDPOINTS.AUTH.PROFILE}?populate=address`);
+        const userData = res.data.data;
+        if (userData) {
+          setFormData(prev => ({
+            ...prev,
+            name: userData.name || prev.name,
+            email: userData.email || prev.email,
+            phone: userData.phone || prev.phone,
+            address: userData.address?.[0]?.addressLine1 || prev.address,
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to fetch user profile", err);
+      }
+    };
+
+    fetchUserProfile();
+  }, []);
 
   const paymentOptions = [
     { id: "upi", label: "UPI" },
@@ -29,6 +72,112 @@ export default function CheckoutScreen({ navigation }: any) {
     { id: "netbanking", label: "Net Banking" },
     { id: "cod", label: "Cash on Delivery" },
   ];
+
+  const validateForm = (): boolean => {
+    const errors: Partial<FormData> = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = "Name is required";
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      errors.email = "Email is invalid";
+    }
+    
+    if (!formData.phone.trim()) {
+      errors.phone = "Phone number is required";
+    } else if (!/^\d{10}$/.test(formData.phone)) {
+      errors.phone = "Phone number must be 10 digits";
+    }
+    
+    if (!formData.address.trim()) {
+      errors.address = "Address is required";
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleInputChange = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear error for this field when user starts typing
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+  };
+
+  const placeOrder = async () => {
+    const orderItems = cartItems.map(item => {
+      const baseProductId = typeof item.id === 'string' ? item.id.split('-')[0] : item.id;
+      const variantId = item.variantDetails?.id || null;
+      
+      return {
+        quantity: item.quantity,
+        price: Number(item.price),
+        productIdId: Number(baseProductId),
+        productVariantIdId: variantId ? Number(variantId) : undefined,
+      };
+    });
+
+    const orderData = {
+      amount: totalPrice.toString(),
+      totalAmount: totalPrice,
+      address: formData.address,
+      name: formData.name,
+      phone: formData.phone,
+      userIdId: auth.user?.id,
+      paymentStatus: selectedPayment === "cod" ? "pending" : "paid",
+      orderStatus: "placed",
+      orderItems: orderItems,
+    };
+
+    try {
+      const response = await api.post(ENDPOINTS.ORDERS, orderData);
+      
+      console.log("Order Creation Response:", response.data);
+      
+      // Simulate API success
+      Alert.alert(
+        "Order Placed! 🎉",
+        `Your order has been placed successfully with ${selectedPayment?.toUpperCase()}!`,
+        [
+          {
+            text: "View Orders",
+            onPress: () => {
+              dispatch(clearCart());
+              navigation.navigate("MainTabs", { screen: "HomeTab" });
+            },
+          },
+          {
+            text: "Go to Home",
+            onPress: () => {
+              dispatch(clearCart());
+              navigation.popToTop();
+            },
+          },
+        ]
+      );
+    } catch (error: any) {
+      console.error("Order placement error:", error);
+      const errorMessage = error.response?.data?.message || "Failed to place order. Please try again.";
+      Alert.alert("Error", errorMessage);
+    }
+  };
+
+  const handleCheckout = () => {
+    if (!selectedPayment) {
+      Alert.alert("Payment Required", "Please select a payment method");
+      return;
+    }
+
+    if (validateForm()) {
+      placeOrder();
+    } else {
+      Alert.alert("Form Error", "Please fill in all required fields correctly");
+    }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f5f5f5" }}>
@@ -52,26 +201,98 @@ export default function CheckoutScreen({ navigation }: any) {
         </Text>
       </View>
 
-      <View style={{ flex: 1, padding: 16 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16 }}>
         {/* Cart Items */}
+        <Text style={styles.sectionTitle}>Order Summary</Text>
         <FlatList
           data={cartItems}
+          scrollEnabled={false}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Image source={{ uri: item._media?.images?.[0]._full_url }} style={styles.image} />
+              <TouchableOpacity 
+                onPress={() => {
+                  const baseId = typeof item.id === 'string' ? item.id.split('-')[0] : item.id;
+                  navigation.navigate("ProductDetails", { productId: baseId });
+                }}
+              >
+              <Image source={{ uri: item.productImages?.[0]?._media?.productImages?.[0]?.relativeUri ? `${MEDIA_URL}/${item.productImages[0]._media.productImages[0].relativeUri}` : undefined }} style={styles.image} />
+              </TouchableOpacity>
               <View style={styles.info}>
                 <Text style={styles.name}>{item.name}</Text>
+                
+                {item.variantDetails && (
+                  <Text style={styles.variantInfo}>
+                    Size: {item.variantDetails.size} | Color: {item.variantDetails.color}
+                  </Text>
+                )}
+
                 <Text style={styles.price}>
                   ₹{item.price} × {item.quantity}
                 </Text>
                 <Text style={styles.subtotal}>
-                  Subtotal: ₹{ Number(item.price) * item.quantity}
+                  Subtotal: ₹{Number(item.price) * item.quantity}
                 </Text>
               </View>
             </View>
           )}
         />
+
+        {/* Delivery Form */}
+        <View style={styles.formView}>
+          <Text style={styles.formTitle}>Delivery Information</Text>
+          
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Full Name *</Text>
+            <TextInput
+              style={[styles.input, formErrors.name && styles.inputError]}
+              placeholder="Enter your full name"
+              value={formData.name}
+              onChangeText={(value) => handleInputChange("name", value)}
+            />
+            {formErrors.name && <Text style={styles.errorText}>{formErrors.name}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Email *</Text>
+            <TextInput
+              style={[styles.input, formErrors.email && styles.inputError]}
+              placeholder="Enter your email"
+              value={formData.email}
+              onChangeText={(value) => handleInputChange("email", value)}
+              keyboardType="email-address"
+              autoCapitalize="none"
+            />
+            {formErrors.email && <Text style={styles.errorText}>{formErrors.email}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Phone Number *</Text>
+            <TextInput
+              style={[styles.input, formErrors.phone && styles.inputError]}
+              placeholder="Enter 10-digit phone number"
+              value={formData.phone}
+              onChangeText={(value) => handleInputChange("phone", value)}
+              keyboardType="phone-pad"
+              maxLength={10}
+            />
+            {formErrors.phone && <Text style={styles.errorText}>{formErrors.phone}</Text>}
+          </View>
+
+          <View style={styles.inputContainer}>
+            <Text style={styles.label}>Delivery Address *</Text>
+            <TextInput
+              style={[styles.input, styles.textArea, formErrors.address && styles.inputError]}
+              placeholder="Enter complete delivery address"
+              value={formData.address}
+              onChangeText={(value) => handleInputChange("address", value)}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+            />
+            {formErrors.address && <Text style={styles.errorText}>{formErrors.address}</Text>}
+          </View>
+        </View>
 
         {/* Payment Options */}
         <View style={styles.paymentBox}>
@@ -95,27 +316,24 @@ export default function CheckoutScreen({ navigation }: any) {
         <View style={styles.footer}>
           <Text style={styles.total}>Total: ₹{totalPrice}</Text>
           <TouchableOpacity
-            style={[styles.placeOrderBtn, !selectedPayment && { opacity: 0.5 }]}
-            disabled={!selectedPayment}
-            onPress={() => {
-              alert(
-                `Order placed successfully with ${
-                  selectedPayment?.toUpperCase() || ""
-                }! 🎉`
-              );
-              dispatch(clearCart());
-              navigation.navigate("Home");
-            }}
+            style={styles.placeOrderBtn}
+            onPress={handleCheckout}
           >
             <Text style={styles.placeOrderText}>Place Order</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 12,
+    color: "#333",
+  },
   card: {
     flexDirection: "row",
     backgroundColor: "#fff",
@@ -130,14 +348,59 @@ const styles = StyleSheet.create({
   image: { width: 80, height: 80, borderRadius: 8, marginRight: 12 },
   info: { flex: 1, justifyContent: "center" },
   name: { fontSize: 14, fontWeight: "600", marginBottom: 4 },
+  variantInfo: { fontSize: 12, color: "#666", marginBottom: 4 },
   price: { fontSize: 14, color: "#e91e63", marginBottom: 2 },
   subtotal: { fontSize: 12, color: "#777" },
+
+  formView: {
+    borderColor: "#eee",
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 16,
+    marginTop: 8,
+  },
+  formTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginBottom: 16,
+    color: "#333",
+  },
+  inputContainer: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "600",
+    marginBottom: 6,
+    color: "#333",
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 14,
+    backgroundColor: "#fafafa",
+  },
+  inputError: {
+    borderColor: "#e91e63",
+  },
+  textArea: {
+    height: 80,
+    paddingTop: 10,
+  },
+  errorText: {
+    color: "#e91e63",
+    fontSize: 12,
+    marginTop: 4,
+  },
 
   paymentBox: {
     backgroundColor: "#fff",
     borderRadius: 12,
     padding: 16,
-    marginTop: 8,
     marginBottom: 20,
   },
   paymentHeading: { fontSize: 18, fontWeight: "700", marginBottom: 12 },
@@ -145,10 +408,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     paddingVertical: 12,
-    paddingHorizontal:10,
+    paddingHorizontal: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#eee",
-    borderRadius:5
+    borderRadius: 5,
   },
   optionSelected: {
     backgroundColor: "#f0f8ff",
@@ -156,7 +419,7 @@ const styles = StyleSheet.create({
   optionText: { fontSize: 16 },
   radio: { fontSize: 20 },
 
-  footer: { paddingTop: 16 },
+  footer: { paddingTop: 16, paddingBottom: 32 },
   total: { fontSize: 18, fontWeight: "700", marginBottom: 12, textAlign: "right" },
   placeOrderBtn: {
     backgroundColor: "#e91e63",
