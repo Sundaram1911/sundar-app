@@ -7,10 +7,12 @@ import {
   Image,
   TouchableOpacity,
   StyleSheet,
+  ScrollView,
 } from "react-native";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { addToCart, decreaseQuantity, removeFromCart } from "../store/slices/cartSlice";
+import { addToCart, decreaseQuantity, removeFromCart, updateCartVariant } from "../store/slices/cartSlice";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MEDIA_URL } from "../config/env";
 
 export default function CartScreen({ navigation }: any) {
   const items = useAppSelector((state) => state.cart.items);
@@ -47,10 +49,71 @@ export default function CartScreen({ navigation }: any) {
             keyExtractor={(item) => item.id.toString()}
             renderItem={({ item }) => (
               <View style={styles.card}>
-                <Image source={{ uri: item._media?.images?.[0]?._full_url }} style={styles.image} />
+                <TouchableOpacity 
+                  onPress={() => {
+                    const baseId = typeof item.id === 'string' ? item.id.split('-')[0] : item.id;
+                    navigation.navigate("ProductDetails", { productId: baseId });
+                  }}
+                >
+                  <Image 
+                    source={{ 
+                      uri: (() => {
+                        const relativeUri = item.productImages?.[0]?._media?.productImages?.[0]?.relativeUri;
+                        return relativeUri ? `${MEDIA_URL}/${relativeUri}` : undefined;
+                      })()
+                    }} 
+                    style={styles.image} 
+                  />
+                </TouchableOpacity>
                 <View style={styles.info}>
                   <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.price}>₹{item.price}</Text>
+                  
+                  {item.variantDetails && (
+                    <Text style={styles.selectedVariantInfo}>
+                      Selected: {item.variantDetails.color} - {item.variantDetails.size}
+                    </Text>
+                  )}
+
+                  {item.productVariants && item.productVariants.length > 0 && (
+                    <View>
+                      <Text style={{ fontSize: 11, color: "#888", marginBottom: 2 }}>Change Variant:</Text>
+                      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.variantScroll}>
+                        {item.productVariants.map((variant: any) => {
+                          const isSelected = item.variantDetails?.id === variant.id;
+                          return (
+                            <TouchableOpacity 
+                              key={variant.id} 
+                              style={[styles.variantBox, isSelected && styles.selectedVariantBox]}
+                              onPress={() => {
+                                if (!isSelected) {
+                                  dispatch(updateCartVariant({ oldId: item.id, newVariant: variant }));
+                                }
+                              }}
+                            >
+                              <Text style={[styles.variantText, isSelected && styles.selectedVariantText]}>
+                                {variant.color}-{variant.size}
+                              </Text>
+                            </TouchableOpacity>
+                          )
+                        })}
+                      </ScrollView>
+                    </View>
+                  )}
+
+                  <View style={styles.priceStockRow}>
+                    <Text style={styles.price}>₹{item.price}</Text>
+                    {(() => {
+                      const currentStock = item.variantDetails?.stock ?? item.stock ?? 0;
+                      return (
+                        <Text style={[
+                          styles.stockText,
+                          currentStock <= 0 ? styles.outOfStock : currentStock <= 5 ? styles.lowStock : null
+                        ]}>
+                          {currentStock <= 0 ? 'Out of Stock' : currentStock <= 5 ? `Only ${currentStock} left` : 'In Stock'}
+                        </Text>
+                      );
+                    })()}
+                  </View>
                   {/* Quantity controls */}
                 <View style={styles.qtyRow}>
                   <TouchableOpacity
@@ -83,7 +146,7 @@ export default function CartScreen({ navigation }: any) {
           {/* ✅ Sticky footer */}
           <View style={styles.footer}>
             <Text style={styles.totalText}>
-              Total: ₹{totalPrice} ({items.length} items)
+              Total: ₹{totalPrice} ({items.reduce((acc, curr) => acc + curr.quantity, 0)} units)
             </Text>
             <TouchableOpacity 
             style={styles.checkoutButton}
@@ -146,10 +209,55 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginBottom: 4,
   },
+  selectedVariantInfo: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: "#ff3f6c",
+    marginBottom: 6,
+  },
   price: {
     fontSize: 14,
     color: "#e91e63",
+    fontWeight: "700",
+  },
+  priceStockRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
+  },
+  stockText: {
+    fontSize: 11,
+    color: "#10B981",
+    fontWeight: "600",
+  },
+  lowStock: {
+    color: "#F59E0B",
+  },
+  outOfStock: {
+    color: "#EF4444",
+  },
+  variantScroll: { paddingVertical: 4, marginBottom: 6, maxWidth: 200 },
+  variantBox: { 
+    borderWidth: 1, 
+    borderColor: "#ccc", 
+    paddingHorizontal: 8, 
+    paddingVertical: 4, 
+    borderRadius: 8,
+    marginRight: 6,
+    backgroundColor: "#fff"
+  },
+  selectedVariantBox: {
+    borderColor: "#ff3f6c",
+    backgroundColor: "#fff0f5"
+  },
+  variantText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: "#444"
+  },
+  selectedVariantText: {
+    color: "#ff3f6c"
   },
   removeButton: {
     backgroundColor: "#f44336",

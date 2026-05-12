@@ -18,12 +18,32 @@ interface Product {
   stock?: number;
   shippingClass?: string;
   sku?: string;
-  _media?: {
-    images: {
-      id: number;
-      _full_url: string;
-    }[];
+  productImages?: {
+    id: number;
+    imageId: string;
+    _media?: {
+      productImages?: {
+        id: number;
+        relativeUri?: string;
+        _full_url: string;
+      }[];
+    };
+  }[];
+  categoryId?: {
+    id: number;
+    name: string;
+    slug: string;
+    description?: string;
   };
+  productVariants?: {
+    id: number;
+    size: string;
+    color: string;
+    stock: number;
+    price: string | number;
+    sku: string;
+  }[];
+  variantDetails?: any;
 }
 
 type CartState = {
@@ -62,10 +82,33 @@ const cartSlice = createSlice({
     clearCart: (state) => {
       state.items = [];
     },
+    updateCartVariant: (state, action: PayloadAction<{ oldId: string | number; newVariant: any }>) => {
+      const { oldId, newVariant } = action.payload;
+      const existingItemIndex = state.items.findIndex(i => i.id === oldId);
+      if (existingItemIndex === -1) return;
+      
+      const itemToUpdate = state.items[existingItemIndex];
+      const baseProductId = String(oldId).split('-')[0];
+      const newId = `${baseProductId}-${newVariant.id}`;
+      
+      if (newId === oldId) return;
+
+      const targetItemIndex = state.items.findIndex(i => i.id === newId);
+      
+      if (targetItemIndex !== -1) {
+        state.items[targetItemIndex].quantity += itemToUpdate.quantity;
+        state.items.splice(existingItemIndex, 1);
+      } else {
+        itemToUpdate.id = newId;
+        itemToUpdate.price = newVariant.price;
+        itemToUpdate.sku = newVariant.sku;
+        itemToUpdate.variantDetails = newVariant;
+      }
+    },
   },
 });
 
-export const { addToCart, removeFromCart, decreaseQuantity, clearCart } =
+export const { addToCart, removeFromCart, decreaseQuantity, clearCart, updateCartVariant } =
   cartSlice.actions;
 
 export default cartSlice.reducer;

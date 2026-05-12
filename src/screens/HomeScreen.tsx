@@ -8,11 +8,15 @@ import {
   TouchableOpacity,
   StyleSheet,
   Dimensions,
+  RefreshControl,
 } from "react-native";
 import { useAppDispatch, useAppSelector } from "../store/hooks";
 import { addToCart, decreaseQuantity } from "../store/slices/cartSlice";
-import products from "../data/product.json";
 import { fetchProducts } from "../store/slices/productSlice";
+import axios from "axios";
+import { API_URL, MEDIA_URL } from "../config/env";
+import { ENDPOINTS } from "../config/endpoints";
+import { ScrollView } from "react-native";
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width / 2 - 12;
 
@@ -20,6 +24,14 @@ export default function HomeScreen({ navigation }: any) {
   const dispatch = useAppDispatch();
   const cartItems = useAppSelector((state) => state.cart.items);
   const { items, loading, page, hasMore } = useAppSelector(state => state.product);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
   // ✅ Get qty for a product
   const getQuantity = (id: string) => {
     const item = cartItems.find((p) => p.id === id);
@@ -29,93 +41,137 @@ export default function HomeScreen({ navigation }: any) {
   // ✅ Total items in cart
   const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
 
-const [visibleProducts, setVisibleProducts] = useState(items.slice(0, 6));
-const [currentPage,setCurrentPage]=useState(1);
-const loadMore = () => {
-  const nextPage = page + 1;
-  const newData = items.slice(0, nextPage * 10);
-  setVisibleProducts(newData);
-  setCurrentPage(nextPage);
-};
+  // ✅ Load initial products only once when component mounts
+  useEffect(() => {
+    if (items.length === 0) {
+      dispatch(fetchProducts({ page: 1, limit: 10 }));
+    }
 
-useEffect(() => {
-  console.log(items)
-  dispatch(fetchProducts({ page: currentPage, limit: 10 }));
-}, []);
+    // ✅ Load categories
+    setLoadingCategories(true);
+    axios.get(`${API_URL}${ENDPOINTS.CATEGORIES}`)
+      .then(res => {
+        const fetchedCategories = res.data.data.records;
+        setCategories(fetchedCategories);
+        if (fetchedCategories.length > 0) {
+          setSelectedCategory(fetchedCategories[0]);
+        }
+      })
+      .catch(err => console.error("Failed fetching categories", err))
+      .finally(() => setLoadingCategories(false));
+  }, []);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    setCurrentPage(1);
+
+    Promise.all([
+      dispatch(fetchProducts({ page: 1, limit: 10 })),
+      axios.get(`${API_URL}${ENDPOINTS.CATEGORIES}`).then(res => {
+        const fetchedCategories = res.data.data.records;
+        setCategories(fetchedCategories);
+        if (fetchedCategories.length > 0) {
+          setSelectedCategory(fetchedCategories[0]);
+        }
+      })
+    ])
+      .catch(err => console.error("Refresh failed", err))
+      .finally(() => setRefreshing(false));
+  }, [dispatch]);
+
+  const loadMore = () => {
+    if (!isLoadingMore && !loading && hasMore) {
+      setIsLoadingMore(true);
+      const nextPage = currentPage + 1;
+      setCurrentPage(nextPage);
+      dispatch(fetchProducts({ page: nextPage, limit: 10 })).finally(() => {
+        setIsLoadingMore(false);
+      });
+    }
+  };
+
+  // ✅ Get visible products based on current page and selected category
+  const filteredItems = selectedCategory
+    ? items.filter((p) => p.categoryId?.id === selectedCategory.id)
+    : items;
+  const visibleProducts = filteredItems.slice(0, currentPage * 10);
+
   return (
     <View style={styles.container}>
       <FlatList
-        //data={products}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={["#ff3f6c"]} />}
         data={visibleProducts}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         numColumns={2}
         columnWrapperStyle={styles.row}
         renderItem={({ item }) => {
-          const qty = getQuantity(item.id.toString());
+          const qty = getQuantity(item.id?.toString() || "");
+          const firstImage = item.productImages?.[0]?._media?.productImages?.[0];
+          const imageUrl = firstImage?.relativeUri ? `${MEDIA_URL}/${firstImage.relativeUri}` : undefined;
 
           return (
             <TouchableOpacity onPress={() => navigation.navigate("ProductDetails", { productId: item.id })}>
-            <View style={styles.card}>
-              <Image source={{ uri: item._media?.images?.[0]._full_url }} style={styles.image} />
-              <View style={styles.info}>
-                <Text style={styles.name} numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text style={styles.price}>₹{item.price}</Text>
-
-                {/* {qty === 0 ? (
-                  <TouchableOpacity
-                    style={styles.button}
-                    onPress={() => dispatch(addToCart(item))}
-                  >
-                    <Text style={styles.buttonText}>Add to Cart</Text>
-                  </TouchableOpacity>
-                ) : (
-                  <View style={styles.qtyContainer}>
-                    <TouchableOpacity
-                      style={styles.qtyBtn}
-                      onPress={() => dispatch(decreaseQuantity(item.id))}
-                    >
-                      <Text style={styles.qtyText}>-</Text>
-                    </TouchableOpacity>
-
-                    <Text style={styles.qtyCount}>{qty}</Text>
-
-                    <TouchableOpacity
-                      style={styles.qtyBtn}
-                      onPress={() => dispatch(addToCart(item))}
-                    >
-                      <Text style={styles.qtyText}>+</Text>
-                    </TouchableOpacity>
+              <View style={styles.card}>
+                <Image source={{ uri: imageUrl }} style={styles.image} />
+                <View style={styles.info}>
+                  <Text style={styles.name} numberOfLines={1}>
+                    {item.name}
+                  </Text>
+                  <View style={styles.priceRow}>
+                    <Text style={styles.price}>₹{item.price}</Text>
+                    {(() => {
+                      const variants = item.productVariants;
+                      const totalStock = Array.isArray(variants) && variants.length > 0 
+                        ? variants.reduce((sum: number, v: any) => sum + (v.stock || 0), 0)
+                        : (item.stock || 0);
+                      
+                      return (
+                        <Text style={[
+                          styles.stockText,
+                          totalStock <= 0 ? styles.outOfStock : totalStock <= 5 ? styles.lowStock : null
+                        ]}>
+                          {totalStock <= 0 ? 'Out of Stock' : `${totalStock} left`}
+                        </Text>
+                      );
+                    })()}
                   </View>
-                )} */}
+                </View>
               </View>
-            </View>
             </TouchableOpacity>
           );
         }}
-        onEndReached={loadMore}
+        //onEndReached={loadMore}
         onEndReachedThreshold={0.5}
+        ListHeaderComponent={
+          <View style={styles.categoriesSection}>
+            {/* <Text style={styles.sectionTitle}>Categories</Text> */}
+            {loadingCategories ? (
+              <Text style={{ padding: 10 }}>Loading categories...</Text>
+            ) : (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.categoryScroll}>
+                {categories.map((cat) => {
+                  const isSelected = selectedCategory?.id === cat.id;
+                  return (
+                    <TouchableOpacity
+                      key={cat.id}
+                      style={[styles.categoryPill, isSelected && styles.selectedCategoryPill]}
+                      onPress={() => setSelectedCategory(cat)}
+                    >
+                      <Text style={[styles.categoryText, isSelected && styles.selectedCategoryText]}>{cat.name}</Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+            )}
+            {/* <Text style={[styles.sectionTitle, { marginTop: 15, marginBottom: 10 }]}>All Products</Text> */}
+          </View>
+        }
         ListFooterComponent={
-          visibleProducts.length < items.length ? (
+          isLoadingMore || loading ? (
             <Text style={{ textAlign: "center", padding: 10 }}>Loading more...</Text>
           ) : null
         }
       />
-
-      {/* ✅ Floating Cart Button with total qty */}
-      <TouchableOpacity
-        style={styles.cartButton}
-        onPress={() => navigation.navigate("Cart")}
-      >
-        <Text style={styles.cartButtonText}>🛒</Text>
-
-        {totalItems > 0 && (
-          <View style={styles.badge}>
-            <Text style={styles.badgeText}>{totalItems}</Text>
-          </View>
-        )}
-      </TouchableOpacity>
 
     </View>
   );
@@ -126,6 +182,37 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 8,
     backgroundColor: "#f5f5f5",
+  },
+  categoriesSection: {
+    marginBottom: 5,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    marginLeft: 4,
+    color: "#333",
+  },
+  categoryScroll: {
+    paddingVertical: 10,
+  },
+  categoryPill: {
+    backgroundColor: "#e0e0e0",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    marginLeft: 0,
+  },
+  selectedCategoryPill: {
+    backgroundColor: "#ff3f6c",
+  },
+  categoryText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#444",
+  },
+  selectedCategoryText: {
+    color: "#fff",
   },
   row: {
     justifyContent: "space-between",
@@ -143,7 +230,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 280,
+    height: 240,
     resizeMode: "cover",
   },
   info: {
@@ -157,7 +244,24 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 14,
     color: "#e91e63",
-    marginBottom: 8,
+    fontWeight: "700",
+  },
+  priceRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 2,
+  },
+  stockText: {
+    fontSize: 10,
+    color: "#10B981", // Green for in stock
+    fontWeight: "600",
+  },
+  lowStock: {
+    color: "#F59E0B", // Orange for low stock
+  },
+  outOfStock: {
+    color: "#EF4444", // Red for out of stock
   },
   button: {
     backgroundColor: "#e91e63",
@@ -191,36 +295,4 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     marginHorizontal: 10,
   },
-  cartButton: {
-    position: "absolute",
-    bottom: 20,
-    right: 20,
-    backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 25,
-    elevation: 5,
-  },
-  cartButtonText: {
-    color: "#fff",
-    fontWeight: "600",
-  },
-  badge: {
-  position: "absolute",
-  top: -6,
-  right: -6,
-  backgroundColor: "red",
-  borderRadius: 10,
-  minWidth: 18,
-  height: 18,
-  justifyContent: "center",
-  alignItems: "center",
-  paddingHorizontal: 4,
-},
-badgeText: {
-  color: "#fff",
-  fontSize: 9,
-  fontWeight: "700",
-},
-
 });

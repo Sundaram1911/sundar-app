@@ -9,6 +9,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { MEDIA_URL } from "../config/env";
 import products from "../data/product.json"; // your products array
 import { useAppSelector } from "../store/hooks";
 
@@ -55,7 +56,7 @@ export default function SearchScreen({ navigation }: any) {
             style={styles.card}
             onPress={() => navigation.navigate("ProductDetails", { productId: item.id })}
           >
-            <Image source={{ uri:item._media?.images?.[0]._full_url }} style={styles.image} />
+            <Image source={{ uri:item.productImages?.[0]?._media?.productImages?.[0]?.relativeUri ? `${MEDIA_URL}/${item.productImages[0]._media.productImages[0].relativeUri}` : undefined }} style={styles.image} />
             <View style={{ flex: 1 }}>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.price}>₹{item.price}</Text>

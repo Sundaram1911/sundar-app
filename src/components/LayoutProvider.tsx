@@ -12,7 +12,7 @@ type Props = {
 export default function LayoutProvider({ children, title,navigation }: Props) {
   return (
     <SafeAreaView style={styles.container}>
-      <Header title={title || "App"} navigation={navigation}/>
+      <Header title={title || "App"} />
       <View style={styles.content}>{children}</View>
       {/* <Footer navigation={navigation}/> */}
     </SafeAreaView>
