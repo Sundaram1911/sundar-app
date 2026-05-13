@@ -14,5 +14,6 @@ export const ENDPOINTS = {
   CATEGORIES: '/category',
   ORDERS: '/order',
   USERS: '/euser',
+  ADDRESSES: '/address',
   // SEARCH: '/product/search',
 };
