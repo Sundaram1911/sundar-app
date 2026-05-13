@@ -1,5 +1,5 @@
-// --- App.tsx ---
-import React from "react";
+import React, { useEffect } from "react";
+import { requestUserPermission, notificationListener } from "./src/utils/notificationHelper";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { Provider } from "react-redux";
@@ -16,6 +16,7 @@ import SearchScreen from "./src/screens/SearchScreen";
 import AuthScreen from "./src/screens/AuthScreen";
 import ProfileScreen from "./src/screens/ProfileScreen";
 import OrdersScreen from "./src/screens/OrdersScreen";
+import AddressesScreen from "./src/screens/AddressesScreen";
 import { useSelector } from "react-redux";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { RootState } from "./src/store";
@@ -102,6 +103,7 @@ function RootNavigator() {
           <Stack.Screen name="ProductDetails" component={ProductDetailsScreen} options={{ headerShown: false }} />
           <Stack.Screen name="Checkout" component={CheckoutScreen} />
           <Stack.Screen name="Orders" component={OrdersScreen} />
+          <Stack.Screen name="Addresses" component={AddressesScreen} />
         </>
       )}
     </Stack.Navigator>
@@ -109,6 +111,12 @@ function RootNavigator() {
 }
 
 export default function App() {
+  useEffect(() => {
+    requestUserPermission();
+    const unsubscribe = notificationListener();
+    return unsubscribe;
+  }, []);
+
   return (
     <Provider store={store}>
       <SafeAreaProvider>

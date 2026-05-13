@@ -87,6 +87,13 @@ export default function ProfileScreen() {
             <Text style={styles.menuItemText}>📦 My Orders</Text>
             <Text style={styles.arrowIcon}>→</Text>
           </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.menuItem}
+            onPress={() => (navigation as any).navigate("Addresses")}
+          >
+            <Text style={styles.menuItemText}>📍 My Addresses</Text>
+            <Text style={styles.arrowIcon}>→</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.menuItem}>
             <Text style={styles.menuItemText}>❤️ Wishlist</Text>
             <Text style={styles.arrowIcon}>→</Text>

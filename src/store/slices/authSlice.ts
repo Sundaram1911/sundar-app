@@ -9,6 +9,7 @@ export interface User {
   phone?: string;
   name?: string;
   photoURL?: string;
+  address?: any[];
 }
 
 interface AuthState {
@@ -90,7 +91,7 @@ export const fetchUserProfile = createAsyncThunk(
   'auth/fetchUserProfile',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await api.get(ENDPOINTS.AUTH.PROFILE);
+      const response = await api.get(`${ENDPOINTS.AUTH.PROFILE}?populate=address`);
       return response.data.data; // Use .data.data due to backend WrapResponseInterceptor
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch profile');
